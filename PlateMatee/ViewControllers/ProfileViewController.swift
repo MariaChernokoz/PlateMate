@@ -9,165 +9,184 @@ import UIKit
 
 class ProfileViewController: UIViewController {
     
-    // MARK: - UI Components
-    private let profileImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
-        imageView.clipsToBounds = true
-        imageView.backgroundColor = .systemGray5
-        imageView.image = UIImage(systemName: "photo")
-        imageView.tintColor = .systemGray3
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
-    }()
+    private let tableView = UITableView(frame: .zero, style: .insetGrouped)
     
-    private let nameLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Mary Chernokoz"
-        label.font = .systemFont(ofSize: 24, weight: .bold)
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
+    private let sections: [[ProfileItem]] = [
+        [
+            ProfileItem(icon: "person.fill", title: "Edit Profile", type: .navigation),
+            ProfileItem(icon: "heart.fill", title: "Favourites", type: .navigation),
+            ProfileItem(icon: "slider.horizontal.3", title: "Update Preferences", type: .navigation)
+        ],
+        [
+            ProfileItem(icon: "questionmark.circle.fill", title: "Feedback & Support", type: .navigation),
+            ProfileItem(icon: "gearshape.fill", title: "Settings", type: .navigation)
+        ]
+    ]
     
-    private let emailLabel: UILabel = {
-        let label = UILabel()
-        label.text = "me12345@gmail.com"
-        label.font = .systemFont(ofSize: 16)
-        label.textColor = .systemGray
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private let menuStackView: UIStackView = {
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.spacing = 12
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        return stackView
-    }()
-    
-    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Profile"
-        view.backgroundColor = .systemBackground
         setupUI()
-        setupMenuItems()
     }
     
-    // MARK: - Setup UI
     private func setupUI() {
-        view.addSubview(profileImageView)
-        view.addSubview(nameLabel)
-        view.addSubview(emailLabel)
-        view.addSubview(menuStackView)
+        view.backgroundColor = .systemBackground
+        title = "Profile"
+        navigationController?.navigationBar.prefersLargeTitles = true
         
-        // Make profile image circular
-        profileImageView.layer.cornerRadius = 60
+        // Setup table view
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.register(ProfileCell.self, forCellReuseIdentifier: "ProfileCell")
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 56, bottom: 0, right: 16)
+        
+        view.addSubview(tableView)
         
         NSLayoutConstraint.activate([
-            profileImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 32),
-            profileImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            profileImageView.widthAnchor.constraint(equalToConstant: 120),
-            profileImageView.heightAnchor.constraint(equalToConstant: 120),
-            
-            nameLabel.topAnchor.constraint(equalTo: profileImageView.bottomAnchor, constant: 24),
-            nameLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            nameLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            
-            emailLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 4),
-            emailLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            emailLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            
-            menuStackView.topAnchor.constraint(equalTo: emailLabel.bottomAnchor, constant: 32),
-            menuStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            menuStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
+            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
-    
-    private func setupMenuItems() {
-        let menuItems = [
-            ("Edit Profile", "person"),
-            ("Favourites", "heart"),
-            ("Update Preferences", "pencil"),
-            ("Feedback & Support", "message"),
-            ("Settings", "gearshape")
-        ]
-        
-        menuItems.forEach { (title, icon) in
-            let button = createMenuItem(title: title, iconName: icon)
-            menuStackView.addArrangedSubview(button)
-        }
+}
+
+// MARK: - UITableViewDataSource
+extension ProfileViewController: UITableViewDataSource {
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return sections.count + 1 // +1 for header section
     }
     
-    private func createMenuItem(title: String, iconName: String) -> UIButton {
-        let button = UIButton(type: .system)
-        button.backgroundColor = .systemGray6
-        button.layer.cornerRadius = 12
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if section == 0 { return 0 } // Header section
+        return sections[section - 1].count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ProfileCell", for: indexPath) as! ProfileCell
+        let item = sections[indexPath.section - 1][indexPath.row]
+        cell.configure(with: item)
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        if section == 0 {
+            let headerView = ProfileHeaderView()
+            return headerView
+        }
+        return nil
+    }
+    
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return section == 0 ? 200 : UITableView.automaticDimension
+    }
+}
+
+// MARK: - UITableViewDelegate
+extension ProfileViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let item = sections[indexPath.section - 1][indexPath.row]
+        // Handle navigation or action based on item type
+    }
+}
+
+// MARK: - Models and Custom Views
+enum ProfileItemType {
+    case navigation
+    case toggle
+}
+
+struct ProfileItem {
+    let icon: String
+    let title: String
+    let type: ProfileItemType
+}
+
+class ProfileCell: UITableViewCell {
+    private let iconImageView = UIImageView()
+    
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupUI() {
+        iconImageView.tintColor = .black
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(iconImageView)
         
-        let stackView = UIStackView()
-        stackView.axis = .horizontal
-        stackView.spacing = 12
+        NSLayoutConstraint.activate([
+            iconImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            iconImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 24),
+            iconImageView.heightAnchor.constraint(equalToConstant: 24)
+        ])
+        
+        accessoryType = .disclosureIndicator
+        backgroundColor = .secondarySystemGroupedBackground
+    }
+    
+    func configure(with item: ProfileItem) {
+        iconImageView.image = UIImage(systemName: item.icon)
+        var content = defaultContentConfiguration()
+        content.text = item.title
+        content.textProperties.font = .systemFont(ofSize: 16)
+        content.textProperties.color = .black
+        content.directionalLayoutMargins.leading = 32
+        contentConfiguration = content
+    }
+}
+
+class ProfileHeaderView: UIView {
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupUI() {
+        backgroundColor = .secondarySystemGroupedBackground
+        
+        let imageView = UIImageView()
+        imageView.image = UIImage(systemName: "person.circle.fill")
+        imageView.tintColor = .systemGray
+        imageView.contentMode = .scaleAspectFit
+        
+        let nameLabel = UILabel()
+        nameLabel.text = "Angela Kovacs"
+        nameLabel.font = .systemFont(ofSize: 22, weight: .semibold)
+        nameLabel.textAlignment = .center
+        
+        let emailLabel = UILabel()
+        emailLabel.text = "angela.k@gmail.com"
+        emailLabel.font = .systemFont(ofSize: 16)
+        emailLabel.textColor = .systemGray
+        emailLabel.textAlignment = .center
+        
+        let stackView = UIStackView(arrangedSubviews: [imageView, nameLabel, emailLabel])
+        stackView.axis = .vertical
+        stackView.spacing = 8
         stackView.alignment = .center
         stackView.translatesAutoresizingMaskIntoConstraints = false
         
-        let iconContainer = UIView()
-        iconContainer.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(stackView)
+        
         NSLayoutConstraint.activate([
-            iconContainer.widthAnchor.constraint(equalToConstant: 24),
-            iconContainer.heightAnchor.constraint(equalToConstant: 24)
+            imageView.heightAnchor.constraint(equalToConstant: 80),
+            imageView.widthAnchor.constraint(equalToConstant: 80),
+            
+            stackView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            stackView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            stackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
+            stackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16)
         ])
-        
-        let iconImageView = UIImageView(image: UIImage(systemName: iconName))
-        iconImageView.tintColor = .label
-        iconImageView.contentMode = .scaleAspectFit
-        iconImageView.translatesAutoresizingMaskIntoConstraints = false
-        
-        iconContainer.addSubview(iconImageView)
-        NSLayoutConstraint.activate([
-            iconImageView.centerXAnchor.constraint(equalTo: iconContainer.centerXAnchor),
-            iconImageView.centerYAnchor.constraint(equalTo: iconContainer.centerYAnchor),
-            iconImageView.widthAnchor.constraint(equalToConstant: 20),
-            iconImageView.heightAnchor.constraint(equalToConstant: 20)
-        ])
-        
-        let titleLabel = UILabel()
-        titleLabel.text = title
-        titleLabel.font = .systemFont(ofSize: 16)
-        
-        let chevronImageView = UIImageView(image: UIImage(systemName: "chevron.right"))
-        chevronImageView.tintColor = .systemGray3
-        chevronImageView.contentMode = .scaleAspectFit
-        chevronImageView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            chevronImageView.widthAnchor.constraint(equalToConstant: 14),
-            chevronImageView.heightAnchor.constraint(equalToConstant: 14)
-        ])
-        
-        stackView.addArrangedSubview(iconContainer)
-        stackView.addArrangedSubview(titleLabel)
-        stackView.addArrangedSubview(UIView()) // Spacer
-        stackView.addArrangedSubview(chevronImageView)
-        
-        button.addSubview(stackView)
-        NSLayoutConstraint.activate([
-            stackView.leadingAnchor.constraint(equalTo: button.leadingAnchor, constant: 16),
-            stackView.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -16),
-            stackView.topAnchor.constraint(equalTo: button.topAnchor, constant: 12),
-            stackView.bottomAnchor.constraint(equalTo: button.bottomAnchor, constant: -12)
-        ])
-        
-        button.addTarget(self, action: #selector(menuItemTapped(_:)), for: .touchUpInside)
-        
-        return button
-    }
-    
-    // MARK: - Actions
-    @objc private func menuItemTapped(_ sender: UIButton) {
-        // Здесь можно добавить обработку нажатий на пункты меню
-        guard let title = (sender.subviews.first as? UIStackView)?.arrangedSubviews[1] as? UILabel else { return }
-        print("Tapped: \(title.text ?? "")")
     }
 }

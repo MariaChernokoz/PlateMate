@@ -12,63 +12,52 @@ class MainTabBarController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupViewControllers()
-        customizeAppearance()
+        setupAppearance()
     }
     
     private func setupViewControllers() {
-        // 1. Создаем экземпляры ваших контроллеров
         let homeVC = HomeViewController()
+        homeVC.tabBarItem = UITabBarItem(title: "Home", image: UIImage(systemName: "house"), selectedImage: UIImage(systemName: "house.fill"))
+        
         let searchVC = SearchViewController()
+        searchVC.tabBarItem = UITabBarItem(title: "Search", image: UIImage(systemName: "magnifyingglass"), selectedImage: UIImage(systemName: "magnifyingglass"))
+        
         let cartVC = CartViewController()
+        cartVC.tabBarItem = UITabBarItem(title: "Lists", image: UIImage(systemName: "list.bullet"), selectedImage: UIImage(systemName: "list.bullet"))
+        
         let profileVC = ProfileViewController()
+        profileVC.tabBarItem = UITabBarItem(title: "Profile", image: UIImage(systemName: "person"), selectedImage: UIImage(systemName: "person.fill"))
         
-        // 2. Настраиваем иконки и заголовки
-        homeVC.tabBarItem = createTabBarItem(title: "Главная", imageName: "house")
-        searchVC.tabBarItem = createTabBarItem(title: "Поиск", imageName: "magnifyingglass")
-        cartVC.tabBarItem = createTabBarItem(title: "Корзина", imageName: "cart")
-        profileVC.tabBarItem = createTabBarItem(title: "Профиль", imageName: "person")
+        let controllers = [homeVC, searchVC, cartVC, profileVC].map { UINavigationController(rootViewController: $0) }
         
-        // 3. Обертываем в NavigationController (рекомендуется)
-        viewControllers = [
-            embedInNavigation(homeVC),
-            embedInNavigation(searchVC),
-            embedInNavigation(cartVC),
-            embedInNavigation(profileVC)
-        ]
+        viewControllers = controllers
+        selectedIndex = 0
     }
     
-    private func createTabBarItem(title: String, imageName: String) -> UITabBarItem {
-        return UITabBarItem(
-            title: title,
-            image: UIImage(systemName: imageName),
-            selectedImage: UIImage(systemName: "\(imageName).fill")
-        )
-    }
-    
-    private func embedInNavigation(_ vc: UIViewController) -> UINavigationController {
-        let navController = UINavigationController(rootViewController: vc)
-        // Дополнительные настройки NavigationController при необходимости
-        return navController
-    }
-    
-    private func customizeAppearance() {
-        // Настройки для iOS 15+
-        if #available(iOS 15.0, *) {
+    private func setupAppearance() {
+        // Customize tab bar appearance
+        tabBar.tintColor = .black
+        tabBar.unselectedItemTintColor = .systemGray
+        
+        if #available(iOS 13.0, *) {
             let appearance = UITabBarAppearance()
-            appearance.configureWithOpaqueBackground()
+            appearance.configureWithDefaultBackground()
             appearance.backgroundColor = .systemBackground
+            
             tabBar.standardAppearance = appearance
-            tabBar.scrollEdgeAppearance = appearance
+            if #available(iOS 15.0, *) {
+                tabBar.scrollEdgeAppearance = appearance
+            }
         }
         
-        tabBar.tintColor = .systemBlue // Цвет выбранной иконки
-        tabBar.unselectedItemTintColor = .systemGray // Цвет невыбранных иконок
-        
-        // Дополнительно: скрыть заголовок NavigationBar при прокрутке
-        if let viewControllers = viewControllers {
-            for case let navController as UINavigationController in viewControllers {
-                navController.navigationBar.prefersLargeTitles = true
-            }
+        // Customize navigation bar appearance
+        if #available(iOS 13.0, *) {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithDefaultBackground()
+            
+            UINavigationBar.appearance().standardAppearance = appearance
+            UINavigationBar.appearance().scrollEdgeAppearance = appearance
+            UINavigationBar.appearance().compactAppearance = appearance
         }
     }
 }
